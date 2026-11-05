@@ -85,7 +85,11 @@ Windows doesn't let normal apps send input to admin windows. With an admin windo
 
 Untick Start with Windows (or Quit), delete the Mousehole folder, and delete `%APPDATA%\Mousehole`.
 
-## Run from source
+## For developers
+
+You don't need any of this to use Mousehole; the download from Releases is all there is to it. This part is for changing the code, or for building the exe yourself if you'd rather not run one you downloaded.
+
+### Run from source
 
 Python 3.11+ on Windows.
 
@@ -98,9 +102,9 @@ python -m mousehole replay path\to\recording.csv    # run a recording through th
 python -m pytest
 ```
 
-`MOUSEHOLE_HOME` points the settings, log and recordings somewhere else (the tests use it). With the Microsoft Store version of Python, Windows redirects AppData for Store apps, so the folder ends up under `%LOCALAPPDATA%\Packages\PythonSoftwareFoundation.Python.3.x_...\LocalCache\Roaming\Mousehole\`. The "open folder" menu items always open the right place.
+Set `MOUSEHOLE_HOME` to keep settings, the log and recordings somewhere else (the tests do).
 
-## Build
+### Build
 
 ```
 python tools\make_icon.py                           # only if you change the logo
@@ -109,7 +113,7 @@ python -m PyInstaller mousehole.spec --noconfirm
 
 The one-folder build ends up in `dist\Mousehole\`. Zip that folder to share it.
 
-## Layout
+### Layout
 
 | File | What's in it |
 |---|---|
