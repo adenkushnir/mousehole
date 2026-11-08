@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Portal switch animation reference</title>
+<style>body{background:#0e1015;color:#ccd;font-family:sans-serif;padding:24px;max-width:760px;margin:auto}button{padding:6px 12px}</style></head>
+<body>
+<p>Reference for the cursor-switch animation: swirling vortex portals (orange exit, blue entry), cursor sucked into the exit portal, blue halo that follows the cursor on arrival. Timings are in the script.</p>
+<button id="slow">Slow motion: off</button>
+<canvas id="c" style="width:100%;height:170px;display:block;margin-top:12px"></canvas>
+<script>
+const ORANGE='#FF8A1F',BLUE='#2E9BFF',LOOP=3000;
+let speed=1,clock=0,last=performance.now();
+document.getElementById('slow').onclick=e=>{speed=speed===1?0.3:1;e.target.textContent='Slow motion: '+(speed===1?'off':'on');};
+const c=document.getElementById('c');
+function setup(){const d=window.devicePixelRatio||1,w=c.clientWidth;c.width=w*d;c.height=170*d;c.getContext('2d').setTransform(d,0,0,d,0,0);c._w=w;}
+setup();window.addEventListener('resize',setup);
+const cl=v=>Math.max(0,Math.min(1,v)),eo=p=>1-Math.pow(1-p,3),ei=p=>p*p*p;
+// portal open/close scale: 170 ms ease-out open with slight overshoot, 170 ms close
+function os(t,a,b){if(t<a||t>b)return 0;const o=cl((t-a)/170),k=cl((b-t)/170);return Math.min(o<1?eo(o)*1.08:1,eo(k));}
+function cur(x,cx,cy,s,rot,al){x.save();x.globalAlpha=al;x.translate(cx,cy);x.rotate(rot);x.scale(s,s);x.beginPath();x.moveTo(0,0);x.lineTo(0,17);x.lineTo(4.5,13);x.lineTo(7.5,19.5);x.lineTo(10,18.5);x.lineTo(7,12);x.lineTo(12.5,12);x.closePath();x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=1.2;x.fill();x.stroke();x.restore();}
+// vortex: glowing oval centered on the screen edge (half visible), 3 rotating inner arcs, 8 orbiting particles
+function vortex(x,ex,cy,col,s,t,scr){if(s<=0)return;x.save();x.beginPath();x.rect(scr.x,scr.y,scr.w,scr.h);x.clip();x.shadowColor=col;x.shadowBlur=18;x.strokeStyle=col;x.lineWidth=3;const rx=12*s,ry=28*s;x.beginPath();x.ellipse(ex,cy,rx,ry,0,0,Math.PI*2);x.globalAlpha=0.25;x.fillStyle=col;x.fill();x.globalAlpha=1;x.stroke();x.lineWidth=1.6;x.shadowBlur=8;for(let i=0;i<3;i++){const a=t*0.012+i*2.094;x.beginPath();x.ellipse(ex,cy,rx*0.65,ry*0.65,0,a,a+1.3);x.stroke();}for(let i=0;i<8;i++){const a=t*0.008+i*0.785,r=0.35+0.4*((i*37)%10)/10;x.beginPath();x.arc(ex+Math.cos(a)*rx*r,cy+Math.sin(a)*ry*r,1.3,0,Math.PI*2);x.fillStyle='#fff';x.fill();}x.restore();}
+function frame(now){clock+=(now-last)*speed;last=now;const t=clock%LOOP,x=c.getContext('2d'),W=c._w;x.clearRect(0,0,W,170);
+const gap=36,sw=(W-gap-20)/2,L={x:10,y:18,w:sw,h:140},R={x:10+sw+gap,y:18,w:sw,h:140};
+[L,R].forEach((s,i)=>{x.fillStyle='#161a22';x.strokeStyle='#3a4150';x.lineWidth=1;x.beginPath();x.roundRect(s.x,s.y,s.w,s.h,8);x.fill();x.stroke();x.fillStyle='#8a90a0';x.font='11px sans-serif';x.fillText(i?'Laptop':'Desktop',s.x+10,s.y+18);});
+const cy=L.y+L.h/2-10,ex=L.x+L.w,nx=R.x,sx=L.x+L.w*0.15;
+vortex(x,ex,cy,ORANGE,os(t,820,1380),t,L);   // exit portal
+vortex(x,nx,cy,BLUE,os(t,960,1480),t,R);     // entry portal
+if(t<900){const p=ei(cl(t/900));cur(x,sx+(ex-6-sx)*p,cy-8,1,0,1);}            // cursor approaches edge
+else if(t<1140){const p=cl((t-900)/240),ang=p*Math.PI*2.2,rad=(1-p)*12;      // ghost cursor spirals in (240 ms)
+cur(x,ex-4+Math.cos(ang)*rad,cy-8+Math.sin(ang)*rad*0.6,1-p*0.95,ang,1-p*0.6);}
+if(t>=1080){const p=cl((t-1080)/1100),e=eo(p);const cx=nx+2+R.w*0.55*e,cyy=cy+48*Math.sin(e*Math.PI*0.5)*e;
+const h=cl(1-(t-1080)/750);if(h>0){const g=x.createRadialGradient(cx+4,cyy,0,cx+4,cyy,32);   // halo follows cursor, fades over 750 ms
+g.addColorStop(0,'rgba(46,155,255,'+(0.6*h)+')');g.addColorStop(1,'rgba(46,155,255,0)');x.fillStyle=g;x.beginPath();x.arc(cx+4,cyy,32,0,Math.PI*2);x.fill();}
+cur(x,cx,cyy-8,1,0,1);}
+requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></body></html>

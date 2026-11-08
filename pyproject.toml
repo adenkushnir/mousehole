@@ -1,0 +1,9 @@
+[project]
+name = "mousehole"
+version = "0.4.1"
+description = "Portal animation when the cursor switches PCs with PowerToys Mouse Without Borders"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
