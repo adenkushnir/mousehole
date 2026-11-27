@@ -62,6 +62,19 @@ user32.SetWindowLongPtrW.restype = ctypes.c_ssize_t
 user32.SystemParametersInfoW.argtypes = [w.UINT, w.UINT, ctypes.c_void_p, w.UINT]
 SHELL_CLASSES = {'Progman', 'WorkerW', 'Shell_TrayWnd', 'Shell_SecondaryTrayWnd'}  # desktop and taskbar windows, they cover the screen but aren't "full screen apps"
 
+# what Process32FirstW/NextW fill in for each running process. we only use the id and the exe name
+class PROCESSENTRY32W(ctypes.Structure):
+    _fields_ = [('dwSize', w.DWORD), ('cntUsage', w.DWORD), ('th32ProcessID', w.DWORD), ('th32DefaultHeapID', ctypes.c_size_t),
+        ('th32ModuleID', w.DWORD), ('cntThreads', w.DWORD), ('th32ParentProcessID', w.DWORD), ('pcPriClassBase', w.LONG),
+        ('dwFlags', w.DWORD), ('szExeFile', w.WCHAR*260)]
+# process list calls, used to see if powertoys is running
+kernel32.CreateToolhelp32Snapshot.restype = w.HANDLE
+kernel32.CreateToolhelp32Snapshot.argtypes = [w.DWORD, w.DWORD]
+kernel32.Process32FirstW.argtypes = [w.HANDLE, ctypes.POINTER(PROCESSENTRY32W)]
+kernel32.Process32NextW.argtypes = [w.HANDLE, ctypes.POINTER(PROCESSENTRY32W)]
+kernel32.ProcessIdToSessionId.argtypes = [w.DWORD, ctypes.POINTER(w.DWORD)]
+INVALID_HANDLE = ctypes.c_void_p(-1).value  # what CreateToolhelp32Snapshot gives back when it fails
+
 # switch to per monitor dpi v2 (-4) so every coordinate is real pixels on every monitor. has to run before qt starts
 def set_dpi_aware():
     return bool(user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4)))
@@ -176,3 +189,24 @@ def package_family():
     buf = ctypes.create_unicode_buffer(n.value)
     if kernel32.GetCurrentPackageFamilyName(ctypes.byref(n), buf) != 0: return None
     return buf.value
+
+# which windows session a process is in, None if windows won't say
+def session_of(pid):
+    sid = w.DWORD()
+    return sid.value if kernel32.ProcessIdToSessionId(pid, ctypes.byref(sid)) else None
+
+# lowercase exe names of every process running in our own windows session, so another signed-in user's don't count
+def process_names():
+    snap = kernel32.CreateToolhelp32Snapshot(2, 0)  # 2 = every process
+    if snap in (None, INVALID_HANDLE): return set()
+    mine, names = session_of(os.getpid()), set()
+    entry = PROCESSENTRY32W()
+    entry.dwSize = ctypes.sizeof(entry)
+    try:
+        ok = kernel32.Process32FirstW(snap, ctypes.byref(entry))
+        while ok:  # loops over every process in the snapshot
+            if session_of(entry.th32ProcessID) == mine: names.add(entry.szExeFile.lower())  # skip other users' processes
+            ok = kernel32.Process32NextW(snap, ctypes.byref(entry))
+    finally:
+        kernel32.CloseHandle(snap)
+    return names

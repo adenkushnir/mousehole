@@ -1,6 +1,6 @@
 [project]
 name = "mousehole"
-version = "0.4.1"
+version = "0.4.2"
 description = "Portal animation when the cursor switches PCs with PowerToys Mouse Without Borders"
 requires-python = ">=3.11"
 
