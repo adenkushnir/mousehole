@@ -5,7 +5,7 @@ from PySide6.QtCore import QLockFile, QObject, QTimer, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPlainTextEdit, QPushButton, QSystemTrayIcon, QVBoxLayout, QWidget
-from . import __version__, paths, portal, settings, win32
+from . import __version__, paths, portal, powertoys, settings, win32
 from .overlay import Animator
 from .recorder import Recorder
 from .settings_ui import SettingsWindow
@@ -88,10 +88,27 @@ class Tray:
         self.window.set_state(not self.watcher or self.watcher.det.state == 'home')
         self.update_look()
         self.icon.show()
+        note, bad = '', False
+        # make sure powertoys is up. at sign-in it's starting itself too, so give it a minute first
+        if self.s['start_powertoys'] and quiet: QTimer.singleShot(powertoys.SIGN_IN_WAIT_MS, self.late_powertoys_check)
+        elif self.s['start_powertoys']: note, bad = self.check_powertoys()
         if not quiet:
             # new tray icons hide under the ^ on windows 11, so say where we went
-            QTimer.singleShot(800, lambda: self.icon.showMessage('Mousehole is running',
-                'It lives in the tray: click ^ near the clock. Right-click the icon for options.', QSystemTrayIcon.Information, 5000))
+            hello = 'It lives in the tray: click ^ near the clock. Right-click the icon for options.' + (f'\n{note}' if note else '')
+            QTimer.singleShot(800, lambda: self.icon.showMessage('Mousehole is running', hello,
+                QSystemTrayIcon.Warning if bad else QSystemTrayIcon.Information, 8000 if bad else 5000))
+
+    # start powertoys if it isn't running. gives back a line to tell the user ('' for none) and whether it's a problem
+    def check_powertoys(self):
+        try: return powertoys.NOTES.get(powertoys.ensure(), ('', False))
+        except Exception:
+            log.exception('powertoys check failed')
+            return '', False
+
+    # the check a minute after sign-in: only a problem gets a notification, starting it just goes in the log
+    def late_powertoys_check(self):
+        note, bad = self.check_powertoys()
+        if bad: self.icon.showMessage('Mousehole', note, QSystemTrayIcon.Warning, 8000)
 
     # bring up the detections window
     def show_window(self):

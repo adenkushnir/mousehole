@@ -64,6 +64,10 @@ class SettingsWindow(QWidget):
             self.boot.setEnabled(False)
             self.boot.setToolTip('Only for the built Mousehole.exe, not when running from source')
         form.addRow(self.boot)
+        self.pt = QCheckBox("Start PowerToys if it isn't running")
+        self.pt.setToolTip('Checked once when Mousehole starts, or a minute after signing in. PowerToys opens in the tray')
+        self.pt.toggled.connect(lambda on: self.set('start_powertoys', on))
+        form.addRow(self.pt)
         buttons = QHBoxLayout()
         prev = QPushButton('Preview')
         prev.clicked.connect(lambda: on_preview(self.screen()))
@@ -85,6 +89,7 @@ class SettingsWindow(QWidget):
     def refresh(self):
         self.loading = True
         self.anim.setChecked(self.s['animations'])
+        self.pt.setChecked(self.s['start_powertoys'])
         for key, (sl, val, div, show) in self.sliders.items():  # loops over each slider and sets it from the settings
             sl.setValue(round(self.s[key] * div))
             val.setText(show(self.s[key]))

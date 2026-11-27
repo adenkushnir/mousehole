@@ -6,7 +6,7 @@ A small Windows companion for [PowerToys Mouse Without Borders](https://learn.mi
 - When the cursor **leaves**, that vortex carries straight on: a ghost cursor spirals into it and it snaps shut.
 - On the PC it **arrives** at, a blue vortex opens where it comes in, and a soft blue glow follows the cursor for a moment.
 
-Mouse Without Borders has no API or events, so Mousehole runs next to it on each PC and works out when a switch happens by watching the mouse and the cursor. It never modifies, patches or injects anything into PowerToys. It only reads a few layout settings from the PowerToys settings file (never the security key).
+Mouse Without Borders has no API or events, so Mousehole runs next to it on each PC and works out when a switch happens by watching the mouse and the cursor. It never modifies, patches or injects anything into PowerToys. It only reads a few layout settings from the PowerToys settings file (never the security key), and starts PowerToys if it isn't running.
 
 Not affiliated with Microsoft or PowerToys.
 
@@ -49,6 +49,7 @@ Starting it a second time just reminds you it's already running.
 | Exit / entry portal colour | Orange and blue by default |
 | Switching edges | Auto reads the PowerToys layout (including wrap-around). Pick left/right/both to override |
 | Start with Windows | Only available in the built exe |
+| Start PowerToys if it isn't running | On by default. When Mousehole starts it checks once and, if PowerToys isn't running, starts it quietly in the tray (the startup notification says so). When it starts with Windows it waits a minute first, since PowerToys usually starts itself then. If PowerToys can't be found you get a notification |
 
 Settings are saved straight away to `%APPDATA%\Mousehole\settings.json`.
 
@@ -122,6 +123,7 @@ The one-folder build ends up in `dist\Mousehole\`. Zip that folder to share it.
 | `mousehole/edges.py` | edge maths: which edges switch, mapping between screens, DPI |
 | `mousehole/overlay.py`, `portal.py`, `anim.py` | the click-through overlay windows, drawing and timing |
 | `mousehole/tray.py`, `settings_ui.py`, `settings.py` | tray menu, settings window, settings file |
+| `mousehole/powertoys.py` | starts PowerToys if it isn't running |
 | `mousehole/recorder.py`, `replay.py` | diagnostic signal recorder and replay |
 | `mousehole/win32.py`, `hook.py`, `fgwatch.py` | the Windows calls |
 | `reference/portal_reference.html` | the animation the portal look and timing are based on |

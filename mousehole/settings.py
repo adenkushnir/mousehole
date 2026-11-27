@@ -3,7 +3,8 @@ import json, os, re
 from . import paths
 
 DEFAULTS = {'animations': True, 'portal_size': 1.0, 'speed': 1.0, 'glow': 1.0, 'halo_size': 32, 'halo_fade_ms': 750,
-    'exit_color': '#FF8A1F', 'entry_color': '#2E9BFF', 'edge_side': 'auto', 'approach_px': 200}  # every setting and its default
+    'exit_color': '#FF8A1F', 'entry_color': '#2E9BFF', 'edge_side': 'auto', 'approach_px': 200,
+    'start_powertoys': True}  # every setting and its default
 RANGES = {'portal_size': (0.5, 2.0), 'speed': (0.5, 2.0), 'glow': (0.0, 2.0), 'halo_size': (16, 64), 'halo_fade_ms': (300, 1500),
     'approach_px': (0, 400)}  # lowest and highest allowed for the number settings. approach 0 means off
 SIDES = {'auto': None, 'left': ('left',), 'right': ('right',), 'both': ('left', 'right')}  # edge setting to the edges it means. auto = read the powertoys layout
